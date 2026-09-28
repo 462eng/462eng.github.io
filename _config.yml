@@ -1,0 +1,52 @@
+# Site settings — built natively by GitHub Pages (no Actions).
+title: 462eng notes
+description: >-
+  Technical notes from 462engineering: Linux, graphics, VR and the odd
+  kernel/compositor bug we ran into while building things.
+author: Jonathan (462engineering)
+url: "https://462eng.github.io"
+baseurl: ""
+lang: en
+
+github_username: 462eng
+
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+permalink: /:year/:month/:day/:title/
+
+minima:
+  date_format: "%Y-%m-%d"
+
+header_pages:
+  - topics.md
+  - about.md
+
+# Structure: one "daily" post per day (category daily, layout day) is the
+# only entry on the home page; detailed articles are ordinary posts with
+# `day: "YYYY-MM-DD"` (layout article) and are listed on their day's page.
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: article
+      author: "Jonathan (462engineering) & Claude (Anthropic)"
+
+feed:
+  categories:
+    - daily
+
+exclude:
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock
+  - vendor

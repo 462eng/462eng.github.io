@@ -1,0 +1,26 @@
+---
+layout: default
+---
+<div class="home">
+  <p>Engineering notes from <a href="https://www.462eng.fr">462engineering</a>.
+  One entry per day; open a day to read its topics. Each post says what was
+  measured, what was verified in source code, and what is still a hypothesis.</p>
+
+  <ul class="post-list day-list">
+    {%- for d in site.categories.daily %}
+    {%- assign day = d.date | date: "%Y-%m-%d" -%}
+    {%- assign articles = site.posts | where: "day", day | sort: "date" %}
+    <li>
+      <h3><a class="post-link" href="{{ d.url | relative_url }}">{{ d.title | escape }}</a></h3>
+      <ul class="day-topics">
+        {%- for a in articles %}
+        <li>{{ a.short_title | default: a.title | escape }}</li>
+        {%- endfor %}
+      </ul>
+    </li>
+    {%- endfor %}
+  </ul>
+
+  <p class="rss-subscribe">Subscribe <a href="{{ '/feed.xml' | relative_url }}">via Atom</a>
+  (all posts) or <a href="{{ '/feed/daily.xml' | relative_url }}">daily entries only</a>.</p>
+</div>

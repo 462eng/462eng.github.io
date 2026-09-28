@@ -1,0 +1,75 @@
+diff --git a/src/xrt/compositor/main/comp_window_direct_wayland.c b/src/xrt/compositor/main/comp_window_direct_wayland.c
+index 7425ac56f..c9b0cb6b6 100644
+--- a/src/xrt/compositor/main/comp_window_direct_wayland.c
++++ b/src/xrt/compositor/main/comp_window_direct_wayland.c
+@@ -22,6 +22,7 @@
+ #include "xrt/xrt_compiler.h"
+ #include "main/comp_window.h"
+ #include "main/comp_window_direct.h"
++#include "os/os_time.h"
+ #include "util/u_debug.h"
+ 
+ #ifndef VK_EXT_acquire_drm_display
+@@ -29,6 +30,7 @@
+ #endif
+ 
+ DEBUG_GET_ONCE_OPTION(requested_connector, "XRT_COMPOSITOR_WAYLAND_CONNECTOR", NULL)
++DEBUG_GET_ONCE_OPTION(requested_drm_node, "XRT_COMPOSITOR_WAYLAND_DRM_NODE", NULL)
+ 
+ struct direct_wayland_lease
+ {
+@@ -387,9 +389,37 @@ get_named_connector_or_first(struct comp_window_direct_wayland *w, const char *n
+ 	struct direct_wayland_lease_device *dev = w->devices;
+ 	struct direct_wayland_lease_connector *conn = NULL;
+ 
++	/*
++	 * Let lease devices send drm_fd/connector/done, then skip the ones that
++	 * did not: mutter keeps a wp_drm_lease_device_v1 global for every removed
++	 * secondary GPU (evdi, GNOME mutter #710) and those stale globals never
++	 * send done, so waiting for them blocked startup forever.
++	 */
++	for (int ms = 0; ms < 2000; ms += 50) {
++		bool all_done = true;
++		wl_display_roundtrip(w->display);
++		for (struct direct_wayland_lease_device *d = w->devices; d; d = d->next) {
++			all_done = all_done && d->done;
++		}
++		if (all_done) {
++			break;
++		}
++		os_nanosleep(50 * U_TIME_1MS_IN_NS);
++	}
++
+ 	while (dev) {
+ 		if (!dev->done) {
+-			wl_display_dispatch(w->display);
++			COMP_WARN(w->base.base.c, "Ignoring DRM lease device that never sent done (stale global?)");
++			dev = dev->next;
++			continue;
++		}
++		// mutter may keep stale lease devices of removed GPUs that advertise
++		// the connectors of the real one: allow pinning the DRM node.
++		const char *node = debug_get_option_requested_drm_node();
++		if (node && (!dev->path || strcmp(node, dev->path) != 0)) {
++			COMP_WARN(w->base.base.c, "Skipping DRM lease device %s (XRT_COMPOSITOR_WAYLAND_DRM_NODE=%s)",
++			          dev->path ? dev->path : "?", node);
++			dev = dev->next;
+ 			continue;
+ 		}
+ 		if (dev->connectors) {
+@@ -453,10 +483,12 @@ comp_window_direct_wayland_init(struct comp_target *w)
+ 		return false;
+ 	}
+ 
+-	// Inform when chosen connector was not found
++	// A requested connector that is missing must not fall back to another
++	// output: with evdi virtual displays around, that would lease one of them.
+ 	if (requested_connector && !found) {
+-		COMP_WARN(w->c, "Could not find requested connector %s, selected first available connector %s",
+-		          requested_connector, w_wayland->selected_connector->name);
++		COMP_ERROR(w->c, "Could not find requested connector %s (first available was %s), giving up",
++		           requested_connector, w_wayland->selected_connector->name);
++		return false;
+ 	}
+ 
+ 	COMP_INFO(w->c, "Using DRM node %s", w_wayland->selected_device->path);

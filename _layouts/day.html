@@ -1,0 +1,16 @@
+---
+layout: post
+---
+{%- assign day = page.date | date: "%Y-%m-%d" -%}
+{%- assign articles = site.posts | where: "day", day | sort: "date" -%}
+{%- if articles.size > 0 -%}
+<nav class="day-toc">
+  <p><strong>Topics of the day</strong></p>
+  <ol>
+    {%- for a in articles %}
+    <li><a href="{{ a.url | relative_url }}">{{ a.title | escape }}</a></li>
+    {%- endfor %}
+  </ol>
+</nav>
+{%- endif %}
+{{ content }}

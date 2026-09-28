@@ -1,0 +1,15 @@
+---
+layout: post
+---
+{%- assign daypost = nil -%}
+{%- for p in site.categories.daily -%}
+  {%- assign pd = p.date | date: "%Y-%m-%d" -%}
+  {%- if pd == page.day -%}{%- assign daypost = p -%}{%- endif -%}
+{%- endfor -%}
+{%- if daypost %}
+<p class="back-to-day"><a href="{{ daypost.url | relative_url }}">← back to {{ daypost.title | escape }}</a></p>
+{%- endif %}
+{{ content }}
+{%- if daypost %}
+<p class="back-to-day"><a href="{{ daypost.url | relative_url }}">← back to {{ daypost.title | escape }}</a></p>
+{%- endif %}
