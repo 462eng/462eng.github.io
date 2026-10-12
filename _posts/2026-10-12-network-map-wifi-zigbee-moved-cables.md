@@ -49,8 +49,9 @@ the machine plugged into each port written next to it]({{ '/assets/2026-10-12/sw
 (port order, SFP cages, gaps). Each port shows its link state (green dot)
 and its network colour, and the machine at the other end of the cable is
 written next to it. "Interne : port 15" ("internal"): this switch is
-an appliance that combines a 15-port switch and an Atom single-board
-computer in one box, wired together on port 15. The SBC was recycled as
+an appliance that combines a switch (14 RJ45 ports, 2 SFP cages and one
+internal port) and an Atom single-board computer in one box, wired
+together on the internal port 15. The SBC was recycled as
 the monitoring machine (Nagios, Cacti), and the switch is the LAN core. "relevé il y a 6 min" means "collected 6 minutes
 ago".*
 
